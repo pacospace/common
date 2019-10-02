@@ -51,7 +51,7 @@ class RuntimeEnvironment:
             with open(content, "r") as input_file:
                 content = input_file.read()
 
-        content = yaml.load(content)
+        content = yaml.safe_load(content)
         return cls.from_dict(content)
 
     @classmethod
@@ -89,15 +89,29 @@ class RuntimeEnvironment:
 
     def to_dict(self, without_none: bool = False):
         """Convert runtime environment configuration to a dict representation."""
-        result = attr.asdict(self)
+        dict_ = attr.asdict(self)
         if not without_none:
-            return result
+            return dict_
 
-        for key, value in dict(result).items():
-            if not value and isinstance(value, dict):
-                result.pop(key)
+        result = {}
+        for key, value in dict_.items():
+            # We support one nested configuration entries.
+            if isinstance(value, dict):
+                for k, v in dict_[key].items():
+                    if v is not None:
+                        if key not in result:
+                            result[key] = {}
+                        if k not in result[key]:
+                            result[key][k] = {}
+                        result[key][k] = v
+                continue
 
-            if value is None:
-                result.pop(key)
+            if value is not None:
+                result[key] = value
 
         return result
+
+    def to_string(self):
+        """Convert runtime environment configuration to a string representation."""
+        dict_representation = self.to_dict(without_none=True)
+        return str(dict_representation)

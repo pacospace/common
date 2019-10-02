@@ -61,7 +61,7 @@ def init_logging(
     """Initialize Thoth's logging - respects all namespaces.
 
     This function allows you to control logging facilities in Thoth. Logging can be configured via env variables
-    so that deployment can respect your configuration. The structure of environment variables is THOTH_LOG_<MODULE>
+    so that deployment can respect your configuration. The structure of environment variables is THOTH_LOG_(MODULE)
     and the value of env variable states verbosity level as in the logging module (DEBUG, INFO, WARNING, ERROR).
 
     >>> import os
@@ -91,12 +91,13 @@ def init_logging(
             daiquiri.output.Stream(
                 formatter=daiquiri.formatter.ColorFormatter(
                     fmt="%(asctime)s [%(process)d] %(color)s%(levelname)-8.8s %(name)s:"
-                        "%(lineno)d: %(message)s%(color_stop)s"
+                    "%(lineno)d: %(message)s%(color_stop)s"
                 )
             ),
         ),
     )
     root_logger = logging.getLogger()
+    environment = os.getenv("SENTRY_ENVIRONMENT", os.getenv("THOTH_DEPLOYMENT_NAME"))
 
     # Disable annoying unverified HTTPS request warnings.
     try:
@@ -113,10 +114,11 @@ def init_logging(
     if _SENTRY_DSN:
         try:
             root_logger.info(
-                "Setting up logging to a Sentry instance %r",
+                "Setting up logging to a Sentry instance %r, environment %r",
                 _SENTRY_DSN.rsplit("@", maxsplit=1)[1],
+                environment
             )
-            sentry_sdk.init(_SENTRY_DSN)
+            sentry_sdk.init(_SENTRY_DSN, environment=environment)
         except Exception:
             root_logger.exception(
                 "Failed to initialize logging to Sentry instance, check configuration"
@@ -151,7 +153,7 @@ def init_logging(
 def logger_setup(
     logger_name: str, logging_level: int, disable: bool = True
 ) -> typing.Callable:
-    """The function defines a wrapper to set Verbosity level.
+    """Define a wrapper to set Verbosity level.
 
     The verbosity can be set for any module within levels DEBUG, INFO, WARNING, ERROR.
 

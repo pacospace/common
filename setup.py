@@ -38,9 +38,10 @@ def get_version():
     raise ValueError("No version identifier found")
 
 
+VERSION = get_version()
 setup(
     name='thoth-common',
-    version=get_version(),
+    version=VERSION,
     description='Shared code logic in the project Thoth.',
     long_description=Path('README.rst').read_text(),
     author='Fridolin Pokorny',
@@ -50,12 +51,12 @@ setup(
         'thoth.common',
         'thoth.common.config',
     ],
-    extras_require={
-        'openshift': [
-            'openshift',
-            'kubernetes'
-        ]
-    },
     zip_safe=False,
-    install_requires=get_install_requires()
+    install_requires=get_install_requires(),
+    command_options={
+        'build_sphinx': {
+            'version': ('setup.py', VERSION),
+            'release': ('setup.py', VERSION),
+        }
+    }
 )
