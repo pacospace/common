@@ -468,6 +468,14 @@ class WorkflowManager:
             ).items
         )
 
+    def get_total_workflows(self, workflow_namespace: str) -> int:
+        """Get the total number of workflows in a given namespace."""
+        return len(
+            self.api.list_namespaced_workflows(
+                workflow_namespace
+            ).items
+        )
+
     def submit_workflow_from_template(
         self,
         namespace: str,
